@@ -4,7 +4,7 @@ import * as matter from 'gray-matter';
 // Default extension
 const defaultExtension = 'mdx';
 
-export interface FilesByDirectory<T> {
+export interface FilesByDirectory<T = Record<string, any>> {
   data: T;
   content: string;
   slug: string;
