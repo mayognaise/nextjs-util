@@ -102,3 +102,11 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Folder view configuration files
+.DS_Store
+Desktop.ini
+Thumbs.db
+
+# Project
+/lib
