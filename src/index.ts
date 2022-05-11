@@ -1,38 +1,65 @@
 import * as fs from 'fs';
 import * as matter from 'gray-matter';
 
-export interface FilesByDirectory {
-  data: {
-    [key: string]: any;
-  };
+// Default extension
+const defaultExtension = 'mdx';
+
+export interface FilesByDirectory<T> {
+  data: T;
   content: string;
   slug: string;
 }
 
-export interface FilesByDirectoryOptions {
+interface FilesByDirectoryOptions {
   extension?: string;
   sort?: string;
   sortType?: 'date' | 'number';
   order?: 'asc' | 'desc';
 }
 
-export const getFilesByDirectory = (
+export interface StaticPathsByDirectory {
+  params: {
+    slug: string;
+  };
+}
+
+interface StaticPathsByDirectoryOptions {
+  extension?: string;
+}
+
+export function getStaticPathsByDirectory(
   directory: string,
-  {
-    extension = 'mdx',
-    sort,
-    sortType,
-    order = 'asc',
-  }: FilesByDirectoryOptions = {},
-): FilesByDirectory[] => {
+  { extension = defaultExtension }: StaticPathsByDirectoryOptions = {},
+): StaticPathsByDirectory[] {
   const regex = new RegExp(`\.${extension}?$`);
   return fs
     .readdirSync(directory)
     .filter((file) => regex.test(file))
     .map((file) => {
       const slug = file.replace(regex, '');
+      return { params: { slug } };
+    });
+}
+
+export function getFilesByDirectory<T extends Record<string, any>>(
+  directory: string,
+  {
+    extension = defaultExtension,
+    sort,
+    sortType,
+    order = 'asc',
+  }: FilesByDirectoryOptions = {},
+): FilesByDirectory<T>[] {
+  const regex = new RegExp(`\.${extension}?$`);
+  return fs
+    .readdirSync(directory)
+    .filter((file) => regex.test(file))
+    .map((file) => {
+      const slug = file.replace(regex, '');
+      const { data, content } = matter.read(`${directory}/${file}`);
       return {
-        ...matter.read(`${directory}/${file}`),
+        data: data as T,
+        content,
         slug,
       };
     })
@@ -72,24 +99,31 @@ export const getFilesByDirectory = (
 
       return 0;
     });
-};
+}
 
-export const getPrevFileBySlug = (
+export function getFileBySlug<T extends Record<string, any>>(
   slug: string,
-  items: FilesByDirectory[],
+  items: FilesByDirectory<T>[],
+): FilesByDirectory<T> | undefined {
+  return items.find((item) => item.slug === slug);
+}
+
+export function getPrevFileBySlug<T extends Record<string, any>>(
+  slug: string,
+  items: FilesByDirectory<T>[],
   loop?: boolean,
-): FilesByDirectory | undefined => {
+): FilesByDirectory<T> | undefined {
   const index = items.findIndex((item) => item.slug === slug);
   if (index === -1 || (index === 0 && !loop)) return undefined;
   return items[index - 1] || items[items.length - 1];
-};
+}
 
-export const getNextFileBySlug = (
+export function getNextFileBySlug<T extends Record<string, any>>(
   slug: string,
-  items: FilesByDirectory[],
+  items: FilesByDirectory<T>[],
   loop?: boolean,
-): FilesByDirectory | undefined => {
+): FilesByDirectory<T> | undefined {
   const index = items.findIndex((item) => item.slug === slug);
   if (index === -1 || (index === items.length - 1 && !loop)) return undefined;
   return items[index + 1] || items[0];
-};
+}

@@ -1,11 +1,25 @@
 import * as path from 'path';
 import {
+  getStaticPathsByDirectory,
   getFilesByDirectory,
+  getFileBySlug,
   getPrevFileBySlug,
   getNextFileBySlug,
 } from '../index';
 
 export const POSTS_PATH = path.join(process.cwd(), 'src/__mocks__/posts');
+
+describe('getStaticPathsByDirectory', () => {
+  const items = getStaticPathsByDirectory(POSTS_PATH);
+
+  it('has proper data', () => {
+    expect(items).toEqual([
+      { params: { slug: 'bye' } },
+      { params: { slug: 'hello' } },
+      { params: { slug: 'night' } },
+    ]);
+  });
+});
 
 describe('getFilesByDirectory', () => {
   it('has slug from file name', () => {
@@ -51,6 +65,22 @@ describe('getFilesByDirectory', () => {
     expect(items[0].slug).toBe('night');
     expect(items[1].slug).toBe('bye');
     expect(items[2].slug).toBe('hello');
+  });
+});
+
+describe('getFileBySlug', () => {
+  const items = getFilesByDirectory(POSTS_PATH);
+
+  it('returns undefined if passing invalid slug', () => {
+    const prev = getFileBySlug('hola', items);
+
+    expect(prev).toBe(undefined);
+  });
+
+  it('returns hello as default if passing hello as slug', () => {
+    const prev = getFileBySlug('hello', items);
+
+    expect(prev?.slug).toBe('hello');
   });
 });
 
